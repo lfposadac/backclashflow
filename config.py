@@ -5,7 +5,7 @@ load_dotenv()
 
 
 class Config:
-    SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
+    SECRET_KEY = os.getenv("SECRET_KEY", "")
     API_KEY = os.getenv("API_KEY", "")
 
     # Office 365 SMTP

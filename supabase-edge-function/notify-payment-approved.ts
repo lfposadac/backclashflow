@@ -10,8 +10,8 @@
 // 3. Crea la funcion: supabase functions new notify-payment-approved
 // 4. Copia este archivo a supabase/functions/notify-payment-approved/index.ts
 // 5. Configura los secretos:
-//    supabase secrets set FLASK_API_URL=http://tu-servidor:5000
-//    supabase secrets set FLASK_API_KEY=induretros-notify-2026-secure-key
+//    supabase secrets set FLASK_API_URL=<tu-url-del-servidor>
+//    supabase secrets set FLASK_API_KEY=<tu-api-key>
 // 6. Despliega: supabase functions deploy notify-payment-approved
 // =============================================================================
 
