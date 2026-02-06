@@ -1,8 +1,8 @@
 from functools import wraps
 
-import requests as http_client
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from flask_mail import Mail, Message
 
 from config import Config
 
@@ -10,6 +10,7 @@ app = Flask(__name__)
 app.config.from_object(Config)
 
 CORS(app, origins=Config.ALLOWED_ORIGINS)
+mail = Mail(app)
 
 
 # ---------------------------------------------------------------------------
@@ -23,31 +24,6 @@ def require_api_key(f):
             return jsonify({"error": "API key invalida o no proporcionada"}), 401
         return f(*args, **kwargs)
     return decorated
-
-
-# ---------------------------------------------------------------------------
-# Resend - Envio de correo
-# ---------------------------------------------------------------------------
-def send_email(to_email, subject, html_body):
-    response = http_client.post(
-        "https://api.resend.com/emails",
-        headers={
-            "Authorization": f"Bearer {app.config['RESEND_API_KEY']}",
-            "Content-Type": "application/json",
-        },
-        json={
-            "from": app.config["MAIL_FROM"],
-            "to": [to_email],
-            "subject": subject,
-            "html": html_body,
-        },
-        timeout=30,
-    )
-
-    if response.status_code not in (200, 201):
-        raise Exception(f"Resend error ({response.status_code}): {response.text}")
-
-    return response.json()
 
 
 # ---------------------------------------------------------------------------
@@ -184,11 +160,12 @@ def send_payment_notification():
     company = data.get("company_name", "Induretros")
 
     try:
-        send_email(
-            to_email=creator_email,
+        msg = Message(
             subject=f"Tu pago ha sido aprobado - {company}",
-            html_body=build_payment_email_html(data),
+            recipients=[creator_email],
+            html=build_payment_email_html(data),
         )
+        mail.send(msg)
         return jsonify({"message": f"Notificacion enviada a {creator_email}"}), 200
 
     except Exception as e:
