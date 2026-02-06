@@ -8,10 +8,8 @@ class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "")
     API_KEY = os.getenv("API_KEY", "")
 
-    # Microsoft Graph API (Azure AD)
-    AZURE_TENANT_ID = os.getenv("AZURE_TENANT_ID")
-    AZURE_CLIENT_ID = os.getenv("AZURE_CLIENT_ID")
-    AZURE_CLIENT_SECRET = os.getenv("AZURE_CLIENT_SECRET")
+    # Resend
+    RESEND_API_KEY = os.getenv("RESEND_API_KEY")
     MAIL_FROM = os.getenv("MAIL_FROM")
 
     # CORS
