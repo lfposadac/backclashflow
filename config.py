@@ -8,13 +8,11 @@ class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "")
     API_KEY = os.getenv("API_KEY", "")
 
-    # Office 365 SMTP
-    MAIL_SERVER = os.getenv("MAIL_SERVER", "smtp.office365.com")
-    MAIL_PORT = int(os.getenv("MAIL_PORT", 587))
-    MAIL_USE_TLS = os.getenv("MAIL_USE_TLS", "True").lower() == "true"
-    MAIL_USERNAME = os.getenv("MAIL_USERNAME")
-    MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
-    MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER")
+    # Microsoft Graph API (Azure AD)
+    AZURE_TENANT_ID = os.getenv("AZURE_TENANT_ID")
+    AZURE_CLIENT_ID = os.getenv("AZURE_CLIENT_ID")
+    AZURE_CLIENT_SECRET = os.getenv("AZURE_CLIENT_SECRET")
+    MAIL_FROM = os.getenv("MAIL_FROM")
 
     # CORS
     ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",")

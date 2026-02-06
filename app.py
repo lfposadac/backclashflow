@@ -1,8 +1,9 @@
 from functools import wraps
 
+import msal
+import requests
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from flask_mail import Mail, Message
 
 from config import Config
 
@@ -10,7 +11,6 @@ app = Flask(__name__)
 app.config.from_object(Config)
 
 CORS(app, origins=Config.ALLOWED_ORIGINS)
-mail = Mail(app)
 
 
 # ---------------------------------------------------------------------------
@@ -24,6 +24,53 @@ def require_api_key(f):
             return jsonify({"error": "API key invalida o no proporcionada"}), 401
         return f(*args, **kwargs)
     return decorated
+
+
+# ---------------------------------------------------------------------------
+# Microsoft Graph API - Envio de correo
+# ---------------------------------------------------------------------------
+def get_graph_access_token():
+    authority = f"https://login.microsoftonline.com/{app.config['AZURE_TENANT_ID']}"
+    client = msal.ConfidentialClientApplication(
+        app.config["AZURE_CLIENT_ID"],
+        authority=authority,
+        client_credential=app.config["AZURE_CLIENT_SECRET"],
+    )
+    result = client.acquire_token_for_client(scopes=["https://graph.microsoft.com/.default"])
+    if "access_token" in result:
+        return result["access_token"]
+    raise Exception(f"Error obteniendo token: {result.get('error_description', 'Unknown error')}")
+
+
+def send_email_graph(to_email, subject, html_body):
+    token = get_graph_access_token()
+    mail_from = app.config["MAIL_FROM"]
+
+    payload = {
+        "message": {
+            "subject": subject,
+            "body": {
+                "contentType": "HTML",
+                "content": html_body,
+            },
+            "toRecipients": [
+                {"emailAddress": {"address": to_email}}
+            ],
+        }
+    }
+
+    response = requests.post(
+        f"https://graph.microsoft.com/v1.0/users/{mail_from}/sendMail",
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        },
+        json=payload,
+        timeout=30,
+    )
+
+    if response.status_code != 202:
+        raise Exception(f"Graph API error ({response.status_code}): {response.text}")
 
 
 # ---------------------------------------------------------------------------
@@ -160,12 +207,11 @@ def send_payment_notification():
     company = data.get("company_name", "Induretros")
 
     try:
-        msg = Message(
+        send_email_graph(
+            to_email=creator_email,
             subject=f"Tu pago ha sido aprobado - {company}",
-            recipients=[creator_email],
-            html=build_payment_email_html(data),
+            html_body=build_payment_email_html(data),
         )
-        mail.send(msg)
         return jsonify({"message": f"Notificacion enviada a {creator_email}"}), 200
 
     except Exception as e:
